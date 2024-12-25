@@ -3,27 +3,205 @@
     <head>
         <meta charset="UTF-8">
         <title>Photoz | Your photo storage</title>
-    </head>
-    <body>
-        <h2>Photo Upload</h2>
+        <style>
+            :root {
+                --primary: #3b82f6;
+                --primary-dark: #2563eb;
+            }
 
-        <input id="fileupload" type="file" name="fileupload" />
-        <button id="upload-button" onclick="uploadFile()"> Upload </button>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
+            body {
+                font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+                line-height: 1.5;
+                color: #333;
+                background-color: #f3f4f6;
+            }
+
+            header {
+                background-color: white;
+                padding: 1rem 2rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                margin-bottom: 2rem;
+            }
+
+            h1 {
+                font-size: 1.875rem;
+                font-weight: 600;
+                color: #1f2937;
+            }
+
+            main {
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 0 1rem;
+            }
+
+            .upload-section {
+                background-color: white;
+                padding: 1.5rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                margin-bottom: 2rem;
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            input[type="file"] {
+                position: relative;
+                max-width: 300px;
+                font-size: 0.875rem;
+            }
+
+            input[type="file"]::file-selector-button {
+                background-color: #f3f4f6;
+                color: #374151;
+                padding: 0.5rem 1rem;
+                border: 1px solid #d1d5db;
+                border-radius: 0.375rem;
+                cursor: pointer;
+                transition: all 0.2s;
+                margin-right: 1rem;
+            }
+
+            input[type="file"]::file-selector-button:hover {
+                background-color: #e5e7eb;
+                border-color: #9ca3af;
+            }
+
+            button {
+                background-color: var(--primary);
+                color: white;
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 0.375rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            button:hover {
+                background-color: var(--primary-dark);
+            }
+
+            .photos {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+                gap: 1rem;
+            }
+
+            .photos img {
+                width: 100%;
+                aspect-ratio: 1;
+                object-fit: cover;
+                border-radius: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                transition: transform 0.2s;
+                cursor: pointer;
+            }
+
+            .photos img:hover {
+                transform: scale(1.02);
+            }
+
+            footer {
+                text-align: center;
+                padding: 2rem;
+                color: #6b7280;
+                margin-top: 2rem;
+            }
+
+            @media (max-width: 640px) {
+                header {
+                    padding: 1rem;
+                }
+                
+                main {
+                    padding: 0 0.5rem;
+                }
+                
+                .photos {
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                }
+            }
+        </style>
         <script>
+            (async () => {
+                await fetch('http://localhost:8080/photoz', {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                })
+                .then(result => result.json())
+                .then(json => setPhotos(json));
+            })();
+
             async function uploadFile() {
                 let formData = new FormData();
                 formData.append("data", fileupload.files[0]);
                 await fetch('http://localhost:8080/photoz', {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
                     method: "POST",
                     body: formData
                 })
-                .then(result => result.json())
-                .then(json => alert(json));
+                .then(result => result.text())
+                .then(photo => setPhoto(JSON.parse(photo)));
+            }
+
+            function setPhotos(photos) {
+                photos.forEach(photo => setPhoto(photo));
+            }
+
+            function setPhoto(photo) {
+                console.log(photo);
+                const image = document.createElement("img");
+                image.setAttribute("src", `data:image/png;base64,${photo.data}`);
+                image.setAttribute("width", "100%");
+                image.addEventListener("click", () => downloadImage(photo.id, photo.fileName));
+
+                document.getElementById("photos").appendChild(image);
+            }
+
+            async function downloadImage(id, fileName) {
+                try {
+                    const response = await fetch(`http://localhost:8080/download/${id}`, {
+                        method: "GET"
+                    });
+
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = fileName; 
+
+                    document.body.appendChild(a); 
+                    a.click(); 
+                    document.body.removeChild(a); 
+
+                    URL.revokeObjectURL(url); 
+                } catch (error) {
+                    console.error("Error downloading file:", error);
+                }
             }
         </script>
+    </head>
+    <body>
+        <header>
+            <h1>Photoz</h1>
+        </header>
+        <main>
+            <section class="upload-section">
+                <input id="fileupload" type="file" name="fileupload" accept="image/*" />
+                <button id="upload-button" onclick="uploadFile()">Upload</button>
+            </section>
+            <section id="photos" class="photos"></section>
+        </main>
+        <footer>Copyright © 2024 Photoz</footer>
     </body>
 </html>

@@ -1,6 +1,6 @@
 package com.reen.dean.photoz.clone.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+// import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -15,7 +15,7 @@ public class Photo {
 
     private String contentType;
 
-    @JsonIgnore
+    // @JsonIgnore
     private byte[] data;
 
     public Photo() {

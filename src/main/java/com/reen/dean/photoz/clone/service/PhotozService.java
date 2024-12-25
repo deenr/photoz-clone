@@ -4,11 +4,6 @@ import com.reen.dean.photoz.clone.model.Photo;
 import com.reen.dean.photoz.clone.repository.PhotozRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 @Service
 public class PhotozService {
 
